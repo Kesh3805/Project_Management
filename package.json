@@ -1,0 +1,27 @@
+{
+  "name": "project-management-dashboard",
+  "version": "1.0.0",
+  "description": "Simple Project Management Dashboard - Full Stack Application",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && npm start",
+    "build:frontend": "cd frontend && npm run build",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend && npm test"
+  },
+  "keywords": [
+    "project-management",
+    "task-management",
+    "react",
+    "express",
+    "rest-api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/project-management-dashboard.git"
+  }
+}
