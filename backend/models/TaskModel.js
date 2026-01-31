@@ -39,7 +39,7 @@ const taskSchema = new mongoose.Schema(
       trim: true
     },
     repoId: {
-      type: Number
+      type: mongoose.Schema.Types.Mixed // Allow both Number and String for GitHub repo IDs
     },
     branch: {
       type: String,
@@ -84,7 +84,81 @@ const taskSchema = new mongoose.Schema(
     },
     lastUpdatedBy: {
       type: String
-    }
+    },
+    // Labels/Tags
+    labels: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Label'
+    }],
+    // Task Dependencies
+    dependencies: [{
+      task: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Task'
+      },
+      type: {
+        type: String,
+        enum: ['blocks', 'blocked-by'],
+        default: 'blocked-by'
+      }
+    }],
+    // Attachments
+    attachments: [{
+      filename: String,
+      originalName: String,
+      mimetype: String,
+      size: Number,
+      url: String,
+      uploadedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    // Recurring task settings
+    recurrence: {
+      enabled: {
+        type: Boolean,
+        default: false
+      },
+      pattern: {
+        type: String,
+        enum: ['daily', 'weekly', 'biweekly', 'monthly', 'yearly'],
+        default: 'weekly'
+      },
+      interval: {
+        type: Number,
+        default: 1
+      },
+      endDate: Date,
+      nextOccurrence: Date,
+      parentTaskId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Task'
+      }
+    },
+    // Activity log
+    activityLog: [{
+      action: {
+        type: String,
+        enum: ['created', 'updated', 'status_changed', 'comment_added', 'attachment_added', 'label_added', 'label_removed', 'dependency_added', 'dependency_removed']
+      },
+      field: String,
+      oldValue: mongoose.Schema.Types.Mixed,
+      newValue: mongoose.Schema.Types.Mixed,
+      performedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      performedByName: String,
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
+    }]
   },
   {
     timestamps: true
@@ -94,14 +168,30 @@ const taskSchema = new mongoose.Schema(
 // Indexes for faster queries
 taskSchema.index({ createdBy: 1, status: 1 });
 taskSchema.index({ createdBy: 1, repo: 1 });
-taskSchema.index({ taskId: 1 });
+// taskId unique index is already defined in the schema above
 taskSchema.index({ dueDate: 1 });
+// Text index for search functionality
+taskSchema.index({ title: 'text', description: 'text', assignee: 'text' });
 
 // Auto-generate task ID
 taskSchema.pre('save', async function(next) {
   if (!this.taskId && this.isNew) {
-    const count = await mongoose.model('Task').countDocuments();
-    this.taskId = `TASK-${String(count + 1).padStart(3, '0')}`;
+    // Find the highest existing taskId number
+    const lastTask = await mongoose.model('Task')
+      .findOne({}, { taskId: 1 })
+      .sort({ taskId: -1 })
+      .lean();
+    
+    let nextNumber = 1;
+    if (lastTask && lastTask.taskId) {
+      // Extract number from taskId (e.g., "TASK-003" -> 3)
+      const match = lastTask.taskId.match(/TASK-(\d+)/);
+      if (match) {
+        nextNumber = parseInt(match[1], 10) + 1;
+      }
+    }
+    
+    this.taskId = `TASK-${String(nextNumber).padStart(3, '0')}`;
   }
   
   // Set completedAt when status changes to Completed

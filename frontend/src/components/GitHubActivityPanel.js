@@ -140,82 +140,81 @@ const GitHubActivityPanel = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="card">
       {/* Header */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white p-6">
+      <div className="border-b border-gray-200 bg-gray-50 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold flex items-center">
-              <span className="mr-3">📊</span>
+            <h2 className="text-xl font-bold text-gray-900">
               GitHub Activity Dashboard
             </h2>
-            <p className="text-gray-300 mt-1">
+            <p className="text-gray-600 mt-1 text-sm">
               Monitor all your GitHub repositories and their activities
             </p>
           </div>
           <button
             onClick={fetchAllData}
             disabled={loading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300"
+            className="btn-primary disabled:opacity-50"
           >
-            {loading ? '⟳ Refreshing...' : '🔄 Refresh All'}
+            {loading ? 'Refreshing...' : '🔄 Refresh All'}
           </button>
         </div>
 
         {/* Stats Row */}
         <div className="grid grid-cols-4 gap-4 mt-6">
-          <div className="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
-            <div className="text-3xl font-bold">{stats.totalRepos}</div>
-            <div className="text-sm text-gray-300">Total Repos</div>
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="text-3xl font-bold text-gray-900">{stats.totalRepos}</div>
+            <div className="text-sm text-gray-600">Total Repos</div>
           </div>
-          <div className="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
-            <div className="text-3xl font-bold">{stats.syncedRepos}</div>
-            <div className="text-sm text-gray-300">Synced as Tasks</div>
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="text-3xl font-bold text-gray-900">{stats.syncedRepos}</div>
+            <div className="text-sm text-gray-600">Synced as Tasks</div>
           </div>
-          <div className="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
-            <div className="text-3xl font-bold">{activity.length}</div>
-            <div className="text-sm text-gray-300">Recent Commits</div>
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="text-3xl font-bold text-gray-900">{activity.length}</div>
+            <div className="text-sm text-gray-600">Recent Commits</div>
           </div>
-          <div className="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
-            <div className="text-3xl font-bold">
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <div className="text-3xl font-bold text-gray-900">
               {stats.lastSync ? formatDate(stats.lastSync) : 'Never'}
             </div>
-            <div className="text-sm text-gray-300">Last Task Sync</div>
+            <div className="text-sm text-gray-600">Last Task Sync</div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 bg-gray-50">
+      <div className="flex border-b border-gray-200 bg-white">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
+          className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
             activeTab === 'overview'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
-              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
         >
-          � Overview
+          Overview
         </button>
         <button
           onClick={() => setActiveTab('activity')}
-          className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
+          className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
             activeTab === 'activity'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
-              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
         >
-          🔔 Activity Feed
+          Activity Feed
         </button>
         <button
           onClick={() => setActiveTab('repositories')}
-          className={`flex-1 px-6 py-4 text-sm font-semibold transition-all ${
+          className={`flex-1 px-6 py-4 text-sm font-medium transition-all ${
             activeTab === 'repositories'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
-              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
           }`}
         >
-          � Repositories
+          Repositories
         </button>
       </div>
 

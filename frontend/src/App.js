@@ -5,9 +5,15 @@ import TaskForm from './components/TaskForm';
 import FilterBar from './components/FilterBar';
 import Login from './components/Login';
 import GitHubActivityPanel from './components/GitHubActivityPanel';
-import GitHubRepoSync from './components/GitHubRepoSync';
+import Dashboard from './components/Dashboard';
+import Comments from './components/Comments';
+import Labels from './components/Labels';
+import Search from './components/Search';
+import Notifications from './components/Notifications';
+import BulkActions from './components/BulkActions';
 import { getTasks, createTask, updateTask, deleteTask } from './services/api';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 function AppContent() {
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -20,12 +26,20 @@ function AppContent() {
   const [selectedRepo, setSelectedRepo] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
   const [showGitHubPanel, setShowGitHubPanel] = useState(false);
-  const [showRepoSync, setShowRepoSync] = useState(false);
   const [filters, setFilters] = useState({
     status: 'All',
     priority: 'All',
     sortBy: ''
   });
+  
+  // New feature states
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showLabels, setShowLabels] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [selectedTaskForComments, setSelectedTaskForComments] = useState(null);
+  const [selectedTasks, setSelectedTasks] = useState([]);
 
   // Fetch tasks on mount
   useEffect(() => {
@@ -123,16 +137,53 @@ function AppContent() {
     setFilters({ ...filters, ...newFilters });
   };
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+K or Cmd+K for search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(true);
+      }
+      // Escape to close modals
+      if (e.key === 'Escape') {
+        setShowSearch(false);
+        setShowDashboard(false);
+        setShowLabels(false);
+        setShowNotifications(false);
+        setShowComments(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleTaskSelect = (taskId) => {
+    setSelectedTasks(prev => 
+      prev.includes(taskId) 
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
+  };
+
+  const handleCommentsClick = (task) => {
+    setSelectedTaskForComments(task);
+    setShowComments(true);
+  };
+
+  const handleBulkComplete = () => {
+    setSelectedTasks([]);
+    fetchTasks();
+  };
+
   // Show loading spinner while checking authentication
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="relative w-20 h-20 mx-auto mb-6">
-            <div className="absolute inset-0 border-4 border-white/30 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-transparent border-t-white rounded-full animate-spin"></div>
-          </div>
-          <p className="text-white text-xl font-semibold">Loading...</p>
+          <div className="inline-block w-12 h-12 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading...</p>
         </div>
       </div>
     );
@@ -144,40 +195,40 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Header />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+      <Header 
+        onSearchClick={() => setShowSearch(true)}
+        onDashboardClick={() => setShowDashboard(true)}
+        onLabelsClick={() => setShowLabels(true)}
+        onNotificationsClick={() => setShowNotifications(true)}
+      />
       
-      <main className="container-modern py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Error Message */}
         {error && (
-          <div className="glass-dark backdrop-blur-xl rounded-2xl border border-red-400/30 px-6 py-4 mb-6 fade-in shadow-xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <span className="text-white font-medium">{error}</span>
-              </div>
-              <button
-                onClick={() => setError(null)}
-                className="text-white/80 hover:text-white font-bold text-3xl transition-colors ml-4"
-              >
-                ×
-              </button>
+          <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 mb-6 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <svg className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-red-800 dark:text-red-200 text-sm font-medium">{error}</span>
             </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 font-bold text-xl transition-colors"
+            >
+              ×
+            </button>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="mb-8 flex justify-between items-center flex-wrap gap-4">
-          <div className="flex gap-4 flex-wrap">
+        <div className="mb-6 flex justify-between items-center flex-wrap gap-3">
+          <div className="flex gap-3 flex-wrap">
             <button
               onClick={() => {
                 setShowForm(!showForm);
                 setEditingTask(null);
-                setShowRepoSync(false);
                 setShowGitHubPanel(false);
               }}
               className="btn-primary flex items-center space-x-2"
@@ -185,19 +236,7 @@ function AppContent() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span>{showForm ? 'Cancel' : 'Add New Task'}</span>
-            </button>
-            
-            <button
-              onClick={() => {
-                setShowRepoSync(!showRepoSync);
-                setShowForm(false);
-                setShowGitHubPanel(false);
-              }}
-              className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
-            >
-              <span className="text-xl">🔗</span>
-              <span>{showRepoSync ? 'Hide' : 'Sync'} GitHub Repos</span>
+              <span>{showForm ? 'Cancel' : 'Add Task'}</span>
             </button>
           </div>
           
@@ -205,12 +244,13 @@ function AppContent() {
             onClick={() => {
               setShowGitHubPanel(!showGitHubPanel);
               setShowForm(false);
-              setShowRepoSync(false);
             }}
             className="btn-secondary flex items-center space-x-2"
           >
-            <span className="text-xl">📊</span>
-            <span>{showGitHubPanel ? 'Hide' : 'Show'} Activity Dashboard</span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>{showGitHubPanel ? 'Hide' : 'Activity'}</span>
           </button>
         </div>
 
@@ -223,17 +263,6 @@ function AppContent() {
               onCancel={() => {
                 setShowForm(false);
                 setEditingTask(null);
-              }}
-            />
-          </div>
-        )}
-
-        {/* GitHub Repo Sync */}
-        {showRepoSync && (
-          <div className="mb-6 fade-in">
-            <GitHubRepoSync
-              onRepoSynced={(task) => {
-                fetchTasks(); // Refresh task list
               }}
             />
           </div>
@@ -257,7 +286,7 @@ function AppContent() {
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-600">Loading tasks...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading tasks...</p>
           </div>
         ) : (
           <TaskList
@@ -265,25 +294,72 @@ function AppContent() {
             onEdit={handleEditTask}
             onDelete={handleDeleteTask}
             onStatusChange={handleUpdateTask}
+            onSelect={handleTaskSelect}
+            selectedTasks={selectedTasks}
+            onCommentsClick={handleCommentsClick}
           />
         )}
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-4 mt-12">
-        <div className="container mx-auto px-4 text-center">
-          <p>&copy; 2025 Project Management Dashboard. All rights reserved.</p>
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-6 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">&copy; 2025 ProjectHub. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Modals */}
+      {showDashboard && <Dashboard onClose={() => setShowDashboard(false)} />}
+      
+      {showSearch && (
+        <Search 
+          onClose={() => setShowSearch(false)} 
+          onTaskSelect={(task) => {
+            handleEditTask(task);
+            setShowSearch(false);
+          }}
+        />
+      )}
+      
+      {showLabels && <Labels onClose={() => setShowLabels(false)} />}
+      
+      {showNotifications && (
+        <Notifications 
+          onClose={() => setShowNotifications(false)}
+          onTaskClick={(taskId) => {
+            // Could implement task navigation here
+          }}
+        />
+      )}
+      
+      {showComments && selectedTaskForComments && (
+        <Comments
+          taskId={selectedTaskForComments._id || selectedTaskForComments.id}
+          taskTitle={selectedTaskForComments.title}
+          onClose={() => {
+            setShowComments(false);
+            setSelectedTaskForComments(null);
+          }}
+        />
+      )}
+
+      {/* Bulk Actions Bar */}
+      <BulkActions
+        selectedTasks={selectedTasks}
+        onComplete={handleBulkComplete}
+        onClear={() => setSelectedTasks([])}
+      />
     </div>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

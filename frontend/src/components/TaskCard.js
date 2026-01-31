@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../services/api';
 
-const TaskCard = ({ task, onEdit, onDelete, onStatusChange }) => {
+const TaskCard = ({ task, onEdit, onDelete, onStatusChange, onSelect, isSelected, onCommentsClick }) => {
   const [syncing, setSyncing] = useState(false);
   
   const priorityColors = {
@@ -59,77 +59,116 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange }) => {
   };
 
   return (
-    <div className="modern-card overflow-hidden scale-in group">
-      {/* Card Header with Gradient */}
-      <div className="relative bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-6">
-        {/* Floating Decorative Elements */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
-        
-        <div className="relative z-10 flex items-center justify-between">
-          <h3 className="text-2xl font-bold text-white truncate flex-1 pr-4">{task.title}</h3>
-          {task.taskId && (
-            <span className="bg-white bg-opacity-30 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-xs font-bold tracking-wide border border-white border-opacity-40">
-              {task.taskId}
-            </span>
-          )}
+    <div className={`card card-hover ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
+      {/* Card Header */}
+      <div className="border-b border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            {/* Selection Checkbox */}
+            {onSelect && (
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => onSelect(task._id || task.id)}
+                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              />
+            )}
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate flex-1 pr-4">{task.title}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            {task.taskId && (
+              <span className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-md text-xs font-medium">
+                {task.taskId}
+              </span>
+            )}
+            {/* Comments Button */}
+            {onCommentsClick && (
+              <button
+                onClick={() => onCommentsClick(task)}
+                className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                title="Comments"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
+        
+        {/* Labels */}
+        {task.labels && task.labels.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {task.labels.map((label, idx) => (
+              <span
+                key={label._id || idx}
+                className="px-2 py-0.5 text-xs font-medium rounded-full text-white"
+                style={{ backgroundColor: label.color || '#6366f1' }}
+              >
+                {label.name}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Card Body */}
-      <div className="p-6 space-y-4 bg-gradient-to-br from-gray-50 to-white">
+      <div className="p-6 space-y-4">
         {/* Description */}
-        <p className="text-gray-700 text-sm line-clamp-3 leading-relaxed">{task.description}</p>
+        <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-3 leading-relaxed">{task.description}</p>
 
         {/* Priority and Status Badges */}
         <div className="flex flex-wrap gap-2">
-          <span className={`badge badge-gradient ${
-            task.priority === 'High' ? 'from-red-500 to-pink-600' :
-            task.priority === 'Medium' ? 'from-yellow-500 to-orange-600' :
-            'from-green-500 to-emerald-600'
+          <span className={`${
+            task.priority === 'High' ? 'badge-danger' :
+            task.priority === 'Medium' ? 'badge-warning' :
+            'badge-success'
           }`}>
-            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-            </svg>
             {task.priority} Priority
           </span>
-          <span className={`badge badge-gradient ${
-            task.status === 'Completed' ? 'from-green-500 to-emerald-600' :
-            task.status === 'InProgress' ? 'from-blue-500 to-indigo-600' :
-            'from-gray-500 to-slate-600'
+          <span className={`${
+            task.status === 'Completed' ? 'badge-success' :
+            task.status === 'InProgress' ? 'badge-primary' :
+            'badge-gray'
           }`}>
-            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
             {task.status === 'InProgress' ? 'In Progress' : task.status}
           </span>
+          {/* Dependencies indicator */}
+          {task.dependencies && task.dependencies.length > 0 && (
+            <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              {task.dependencies.length} dep{task.dependencies.length > 1 ? 's' : ''}
+            </span>
+          )}
         </div>
 
         {/* Info Grid */}
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           {/* Assignee */}
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
               {task.assignee?.[0]?.toUpperCase() || '?'}
             </div>
             <div>
-              <p className="text-xs text-gray-500">Assignee</p>
-              <p className="text-sm font-semibold text-gray-800">{task.assignee}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Assignee</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">{task.assignee}</p>
             </div>
           </div>
 
           {/* Due Date */}
           <div className="flex items-center space-x-2">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              isOverdue() ? 'bg-red-100' : 'bg-blue-100'
+              isOverdue() ? 'bg-red-100 dark:bg-red-900' : 'bg-gray-100 dark:bg-gray-700'
             }`}>
-              <svg className={`w-4 h-4 ${isOverdue() ? 'text-red-600' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-4 h-4 ${isOverdue() ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Due Date</p>
-              <p className={`text-sm font-semibold ${isOverdue() ? 'text-red-600' : 'text-gray-800'}`}>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Due Date</p>
+              <p className={`text-sm font-medium ${isOverdue() ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
                 {formatDate(task.dueDate)}
                 {isOverdue() && <span className="ml-1 text-xs">⚠️</span>}
               </p>
@@ -139,33 +178,38 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange }) => {
 
         {/* GitHub Integration Info */}
         {task.repo && (
-          <div className="border-t border-gray-200 pt-3 mt-3 space-y-2">
+          <div className="border-t border-gray-200 pt-4 mt-4 space-y-3">
             <div className="flex items-center space-x-2 text-sm">
-              <span className="text-gray-500">🔗</span>
-              <span className="font-medium text-gray-700">{task.repo}</span>
+              <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+              <span className="font-medium text-gray-900">{task.repo}</span>
               {task.branch && (
                 <>
                   <span className="text-gray-400">/</span>
-                  <span className="text-gray-600">🌿 {task.branch}</span>
+                  <span className="text-gray-600 text-xs bg-gray-100 px-2 py-0.5 rounded">{task.branch}</span>
                 </>
               )}
             </div>
             
             {/* Latest Commit Info */}
             {task.latestCommit && (
-              <div className="bg-gray-50 rounded p-2 text-xs space-y-1">
+              <div className="bg-gray-50 rounded-lg p-3 text-xs space-y-2">
                 <div className="flex items-start space-x-2">
-                  <span className="text-gray-500">📝</span>
+                  <svg className="w-4 h-4 text-gray-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                  </svg>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-800 line-clamp-2">
+                    <p className="font-medium text-gray-900 line-clamp-2">
                       {task.latestCommit.message}
                     </p>
                     <div className="flex items-center space-x-3 mt-1 text-gray-500">
-                      <span>👤 {task.latestCommit.author}</span>
-                      <span>🕒 {new Date(task.latestCommit.date).toLocaleString()}</span>
+                      <span>{task.latestCommit.author}</span>
+                      <span>•</span>
+                      <span>{new Date(task.latestCommit.date).toLocaleString()}</span>
                     </div>
-                    <div className="mt-1">
-                      <span className="font-mono bg-gray-200 px-2 py-0.5 rounded text-gray-700">
+                    <div className="mt-2 flex items-center space-x-2">
+                      <span className="font-mono bg-gray-200 px-2 py-0.5 rounded text-gray-700 text-xs">
                         {task.latestCommit.sha?.substring(0, 7)}
                       </span>
                       {task.latestCommit.url && (
@@ -173,9 +217,9 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange }) => {
                           href={task.latestCommit.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="ml-2 text-blue-500 hover:text-blue-600"
+                          className="text-blue-600 hover:text-blue-700 font-medium"
                         >
-                          View →
+                          View Commit →
                         </a>
                       )}
                     </div>
@@ -184,72 +228,58 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange }) => {
               </div>
             )}
             
-            {/* Last Synced */}
-            {task.lastSyncedAt && (
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>Last synced: {new Date(task.lastSyncedAt).toLocaleString()}</span>
-                <button
-                  onClick={handleSyncCommits}
-                  disabled={syncing}
-                  className="text-blue-500 hover:text-blue-600 font-medium disabled:opacity-50"
-                >
-                  {syncing ? '⟳ Syncing...' : '🔄 Sync Commits'}
-                </button>
-              </div>
-            )}
-            
-            {/* Sync Button if never synced */}
-            {!task.lastSyncedAt && (
+            {/* Last Synced / Sync Button */}
+            <div className="flex items-center justify-between text-xs">
+              {task.lastSyncedAt && (
+                <span className="text-gray-500">Last synced: {new Date(task.lastSyncedAt).toLocaleString()}</span>
+              )}
               <button
                 onClick={handleSyncCommits}
                 disabled={syncing}
-                className="text-xs text-blue-500 hover:text-blue-600 font-medium disabled:opacity-50"
+                className="btn-ghost text-sm disabled:opacity-50"
               >
-                {syncing ? '⟳ Syncing commits...' : '🔄 Sync Latest Commits'}
+                {syncing ? 'Syncing...' : '🔄 Sync Commits'}
               </button>
-            )}
+            </div>
           </div>
         )}
 
         {/* Status Dropdown */}
-        <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-4 border border-purple-200">
-          <label className="block text-gray-700 text-sm font-semibold mb-2 flex items-center">
-            <svg className="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+          <label className="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2">
             Update Status
           </label>
           <select
             value={task.status}
             onChange={handleStatusChange}
-            className="modern-select"
+            className="select w-full dark:bg-gray-600 dark:border-gray-500 dark:text-white"
           >
-            <option value="Pending">📋 Pending</option>
-            <option value="InProgress">🔄 In Progress</option>
-            <option value="Completed">✅ Completed</option>
+            <option value="Pending">Pending</option>
+            <option value="InProgress">In Progress</option>
+            <option value="Completed">Completed</option>
           </select>
         </div>
       </div>
 
       {/* Card Footer - Action Buttons */}
-      <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 flex justify-end space-x-3 border-t border-gray-200">
+      <div className="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex justify-end space-x-3 border-t border-gray-200 dark:border-gray-600">
         <button
           onClick={() => onEdit(task)}
-          className="group bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center space-x-2"
+          className="btn-secondary"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
-          <span>Edit</span>
+          Edit
         </button>
         <button
           onClick={() => onDelete(task.id)}
-          className="group bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 flex items-center space-x-2"
+          className="btn-danger"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
-          <span>Delete</span>
+          Delete
         </button>
       </div>
     </div>

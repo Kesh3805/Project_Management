@@ -69,7 +69,13 @@ const GitHubRepoSync = ({ onRepoSynced }) => {
         repo: repo.full_name,
         repoId: repo.id,
         branch: repo.default_branch || 'main',
-        latestCommit: latestCommit,
+        latestCommit: latestCommit ? {
+          sha: latestCommit.sha,
+          message: latestCommit.message,
+          author: latestCommit.author,
+          date: latestCommit.date,
+          url: latestCommit.url
+        } : null,
         lastSyncedAt: new Date().toISOString()
       };
 
@@ -114,47 +120,44 @@ const GitHubRepoSync = ({ onRepoSynced }) => {
 
   if (loading) {
     return (
-      <div className="glass-dark backdrop-blur-xl rounded-3xl shadow-2xl p-12 text-center scale-in border border-white/10">
-        <div className="relative w-16 h-16 mx-auto mb-6">
-          <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full"></div>
-          <div className="absolute inset-0 border-4 border-transparent border-t-blue-500 rounded-full animate-spin"></div>
-        </div>
-        <p className="text-white text-lg font-medium">Loading GitHub repositories...</p>
+      <div className="card p-12 text-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600 mb-4"></div>
+        <p className="text-gray-600 text-lg font-medium">Loading GitHub repositories...</p>
       </div>
     );
   }
 
   return (
-    <div className="glass-dark backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/10 scale-in">
+    <div className="card">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 px-8 py-6">
+      <div className="border-b border-gray-200 bg-gray-50 px-8 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-white flex items-center">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-4 border border-white/30">
-                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+              <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center mr-3">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                 </svg>
               </div>
               <span>GitHub Repository Sync</span>
             </h2>
-            <p className="text-white/90 mt-2 ml-16">
+            <p className="text-gray-600 mt-1 text-sm ml-13">
               Import your GitHub repositories as tasks
             </p>
           </div>
           <button
             onClick={syncAllRepos}
             disabled={syncing || repos.length === 0}
-            className="bg-white/20 hover:bg-white/30 disabled:bg-white/10 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center space-x-2 border border-white/30 shadow-lg hover:shadow-xl"
+            className="btn-primary disabled:opacity-50"
           >
             {syncing ? (
               <>
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/50 border-t-white"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/50 border-t-white mr-2"></div>
                 <span>Syncing...</span>
               </>
             ) : (
               <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 <span>Sync All Repos</span>
@@ -162,20 +165,18 @@ const GitHubRepoSync = ({ onRepoSynced }) => {
             )}
           </button>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border-b border-white/10 px-8 py-6">
-        <div className="grid grid-cols-3 gap-6">
-          <div className="text-center bg-white p-4 rounded-xl border border-gray-200 shadow-md">
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-6 mt-6">
+          <div className="text-center bg-white p-4 rounded-lg border border-gray-200">
             <div className="text-3xl font-bold text-blue-600 mb-1">{repos.length}</div>
             <div className="text-sm text-gray-600 font-medium">Total Repos</div>
           </div>
-          <div className="text-center bg-white p-4 rounded-xl border border-gray-200 shadow-md">
+          <div className="text-center bg-white p-4 rounded-lg border border-gray-200">
             <div className="text-3xl font-bold text-green-600 mb-1">{syncedRepos.length}</div>
             <div className="text-sm text-gray-600 font-medium">Synced</div>
           </div>
-          <div className="text-center bg-white p-4 rounded-xl border border-gray-200 shadow-md">
+          <div className="text-center bg-white p-4 rounded-lg border border-gray-200">
             <div className="text-3xl font-bold text-orange-600 mb-1">
               {repos.filter(r => r.private).length}
             </div>
@@ -186,9 +187,9 @@ const GitHubRepoSync = ({ onRepoSynced }) => {
 
       {/* Error Message */}
       {error && (
-        <div className="mx-8 mt-6 bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-400/30 backdrop-blur-sm rounded-xl px-5 py-4">
-          <div className="flex items-center space-x-3 text-white">
-            <svg className="w-6 h-6 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mx-8 mt-6 bg-red-50 border border-red-200 rounded-lg px-5 py-4">
+          <div className="flex items-center space-x-3 text-red-800">
+            <svg className="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span className="font-medium">{error}</span>
@@ -200,11 +201,11 @@ const GitHubRepoSync = ({ onRepoSynced }) => {
       <div className="p-8">
         {repos.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <span className="text-5xl">📦</span>
             </div>
-            <h3 className="text-2xl font-bold text-white mb-3">No Repositories Found</h3>
-            <p className="text-white/70">
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">No Repositories Found</h3>
+            <p className="text-gray-600">
               {error ? 'Please check the error message above' : 'Create a repository on GitHub to get started'}
             </p>
           </div>
@@ -213,10 +214,10 @@ const GitHubRepoSync = ({ onRepoSynced }) => {
             {repos.map((repo) => (
               <div
                 key={repo.id}
-                className={`bg-white rounded-xl shadow-lg p-5 transition-all duration-300 border-2 ${
+                className={`bg-white rounded-lg shadow-sm p-5 transition-all duration-200 border-2 ${
                   isRepoSynced(repo.id)
                     ? 'border-green-400 bg-green-50'
-                    : 'border-gray-200 hover:border-blue-400 hover:shadow-xl hover:scale-105'
+                    : 'border-gray-200 hover:border-blue-400 hover:shadow-md'
                 }`}
               >
                 {/* Repo Header */}
@@ -231,7 +232,7 @@ const GitHubRepoSync = ({ onRepoSynced }) => {
                     </p>
                   </div>
                   {isRepoSynced(repo.id) && (
-                    <span className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs px-3 py-1.5 rounded-full font-bold flex items-center shadow-lg">
+                    <span className="badge-success flex items-center">
                       <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                       </svg>
@@ -275,10 +276,10 @@ const GitHubRepoSync = ({ onRepoSynced }) => {
                 <button
                   onClick={() => syncRepoAsTask(repo)}
                   disabled={syncing || isRepoSynced(repo.id)}
-                  className={`w-full py-3 px-4 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center space-x-2 ${
+                  className={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all flex items-center justify-center space-x-2 ${
                     isRepoSynced(repo.id)
                       ? 'bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300'
-                      : 'bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl hover:scale-105'
+                      : 'btn-primary'
                   }`}
                 >
                   {isRepoSynced(repo.id) ? (
@@ -304,12 +305,12 @@ const GitHubRepoSync = ({ onRepoSynced }) => {
       </div>
 
       {/* Footer */}
-      <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 border-t border-white/10 px-8 py-5 rounded-b-3xl">
-        <p className="text-sm text-white/80 text-center flex items-center justify-center space-x-2">
-          <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+      <div className="bg-gray-50 border-t border-gray-200 px-8 py-5">
+        <p className="text-sm text-gray-600 text-center flex items-center justify-center space-x-2">
+          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span className="font-medium">Tip: Each repository will be created as a task with its own details</span>
+          <span className="font-medium">Each repository will be created as a task with its own details</span>
         </p>
       </div>
     </div>
