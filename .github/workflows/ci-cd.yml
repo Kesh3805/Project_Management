@@ -216,14 +216,25 @@ jobs:
     needs: build-images
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: staging
-    
+
     steps:
-      - name: Deploy to staging
-        run: |
-          echo "🚀 Deploying to staging environment..."
-          # Add your deployment commands here
-          # Examples:
-          # - SSH to server and docker-compose pull/up
-          # - kubectl apply for Kubernetes
-          # - Azure App Service deployment
-          # - AWS ECS/EKS update
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_ACTOR: ${{ github.actor }}
+          APP_DIR: ${{ secrets.STAGING_APP_DIR }}
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          envs: GHCR_TOKEN,GHCR_ACTOR,APP_DIR
+          script: |
+            cd "$APP_DIR"
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_ACTOR" --password-stdin
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker image prune -f
+            echo "✅ Staging deployment complete"
