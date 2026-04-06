@@ -62,11 +62,13 @@ jobs:
       
       - name: Upload coverage
         uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           directory: ./backend/coverage
           flags: backend
-          token: ${{ secrets.CODECOV_TOKEN }}
-        if: always() && secrets.CODECOV_TOKEN != ''
+          token: ${{ env.CODECOV_TOKEN }}
+        if: ${{ always() && env.CODECOV_TOKEN != '' }}
 
   # ================================
   # Frontend Tests & Build
