@@ -65,7 +65,8 @@ jobs:
         with:
           directory: ./backend/coverage
           flags: backend
-        if: always()
+          token: ${{ secrets.CODECOV_TOKEN }}
+        if: always() && secrets.CODECOV_TOKEN != ''
 
   # ================================
   # Frontend Tests & Build
