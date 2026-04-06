@@ -1,38 +1,49 @@
 const { validate, validateObjectId, schemas } = require('../../middleware/validator');
-const Joi = require('joi');
+const { AppError, ErrorTypes } = require('../../middleware/errorHandler');
 
 describe('Validator Middleware', () => {
   describe('validate', () => {
-    const mockSchema = Joi.object({
-      name: Joi.string().required(),
-      age: Joi.number().min(0)
-    });
-
     it('should call next() when validation passes', () => {
-      const req = { body: { name: 'Test', age: 25 } };
+      const req = {
+        body: {
+          title: 'Test Task',
+          status: 'Pending',
+          priority: 'Medium'
+        }
+      };
       const res = {};
       const next = jest.fn();
 
-      validate(mockSchema)(req, res, next);
+      validate('createTask')(req, res, next);
 
       expect(next).toHaveBeenCalledWith();
     });
 
-    it('should return 400 when validation fails', () => {
-      const req = { body: { age: -5 } };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
+    it('should pass AppError to next when validation fails', () => {
+      const req = { body: { title: '' } };
+      const res = {};
       const next = jest.fn();
 
-      validate(mockSchema)(req, res, next);
+      validate('createTask')(req, res, next);
 
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        success: false,
-        message: 'Validation failed'
-      }));
+      expect(next).toHaveBeenCalledTimes(1);
+      const errorArg = next.mock.calls[0][0];
+      expect(errorArg).toBeInstanceOf(AppError);
+      expect(errorArg.statusCode).toBe(400);
+      expect(errorArg.errorCode).toBe(ErrorTypes.VALIDATION_ERROR);
+    });
+
+    it('should pass AppError to next when schema is not found', () => {
+      const req = { body: { name: 'Test' } };
+      const res = {};
+      const next = jest.fn();
+
+      validate('missingSchema')(req, res, next);
+
+      expect(next).toHaveBeenCalledTimes(1);
+      const errorArg = next.mock.calls[0][0];
+      expect(errorArg).toBeInstanceOf(AppError);
+      expect(errorArg.statusCode).toBe(500);
     });
   });
 
@@ -47,17 +58,18 @@ describe('Validator Middleware', () => {
       expect(next).toHaveBeenCalled();
     });
 
-    it('should return 400 for invalid ObjectId', () => {
+    it('should pass AppError to next for invalid ObjectId', () => {
       const req = { params: { id: 'invalid-id' } };
-      const res = {
-        status: jest.fn().mockReturnThis(),
-        json: jest.fn()
-      };
+      const res = {};
       const next = jest.fn();
 
       validateObjectId('id')(req, res, next);
 
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(next).toHaveBeenCalledTimes(1);
+      const errorArg = next.mock.calls[0][0];
+      expect(errorArg).toBeInstanceOf(AppError);
+      expect(errorArg.statusCode).toBe(400);
+      expect(errorArg.errorCode).toBe(ErrorTypes.VALIDATION_ERROR);
     });
   });
 
@@ -67,8 +79,8 @@ describe('Validator Middleware', () => {
         const task = {
           title: 'Test Task',
           description: 'Description',
-          status: 'todo',
-          priority: 'medium'
+          status: 'Pending',
+          priority: 'Medium'
         };
 
         const { error } = schemas.createTask.validate(task);

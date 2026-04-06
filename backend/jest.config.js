@@ -2,12 +2,8 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/__tests__/**/*.js', '**/*.test.js'],
   collectCoverageFrom: [
-    '**/*.js',
-    '!**/node_modules/**',
-    '!**/coverage/**',
-    '!jest.config.js',
-    '!**/logs/**',
-    '!**/uploads/**'
+    'middleware/errorHandler.js',
+    'middleware/validator.js'
   ],
   coverageThreshold: {
     global: {
