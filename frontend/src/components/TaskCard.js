@@ -3,18 +3,6 @@ import api from '../services/api';
 
 const TaskCard = ({ task, onEdit, onDelete, onStatusChange, onSelect, isSelected, onCommentsClick }) => {
   const [syncing, setSyncing] = useState(false);
-  
-  const priorityColors = {
-    Low: 'bg-green-100 text-green-800',
-    Medium: 'bg-yellow-100 text-yellow-800',
-    High: 'bg-red-100 text-red-800'
-  };
-
-  const statusColors = {
-    Pending: 'bg-gray-100 text-gray-800',
-    InProgress: 'bg-blue-100 text-blue-800',
-    Completed: 'bg-green-100 text-green-800'
-  };
 
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
@@ -46,7 +34,6 @@ const TaskCard = ({ task, onEdit, onDelete, onStatusChange, onSelect, isSelected
       });
       
       if (response.data.success) {
-        console.log('Commits synced:', response.data);
         // Refresh the task to show updated commit info
         window.location.reload(); // Simple refresh - you could optimize this
       }

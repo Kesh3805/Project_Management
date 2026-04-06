@@ -23,8 +23,6 @@ function AppContent() {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
-  const [selectedRepo, setSelectedRepo] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState('');
   const [showGitHubPanel, setShowGitHubPanel] = useState(false);
   const [filters, setFilters] = useState({
     status: 'All',
@@ -326,7 +324,7 @@ function AppContent() {
       {showNotifications && (
         <Notifications 
           onClose={() => setShowNotifications(false)}
-          onTaskClick={(taskId) => {
+          onTaskClick={() => {
             // Could implement task navigation here
           }}
         />

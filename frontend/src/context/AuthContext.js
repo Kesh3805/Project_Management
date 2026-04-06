@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }) => {
       setUser(response.data.data);
       return true;
     } catch (error) {
-      console.error('Error fetching user:', error);
       // Token might be invalid, clear it
       logout();
       return false;
@@ -42,7 +41,6 @@ export const AuthProvider = ({ children }) => {
       const tokenFromUrl = urlParams.get('token');
       
       if (tokenFromUrl) {
-        console.log('Found token in URL:', tokenFromUrl.substring(0, 20) + '...');
         // Store token from OAuth callback
         localStorage.setItem('token', tokenFromUrl);
         setToken(tokenFromUrl);
@@ -55,11 +53,8 @@ export const AuthProvider = ({ children }) => {
       } else {
         const storedToken = localStorage.getItem('token');
         if (storedToken) {
-          console.log('Found stored token:', storedToken.substring(0, 20) + '...');
           setToken(storedToken);
           await fetchUser(storedToken);
-        } else {
-          console.log('No token found');
         }
       }
       

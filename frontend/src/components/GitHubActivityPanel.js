@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 
 const GitHubActivityPanel = () => {
@@ -15,53 +15,7 @@ const GitHubActivityPanel = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loadingActivity, setLoadingActivity] = useState(false);
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-  const fetchAllData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch all GitHub repos from user's account
-      const reposResponse = await api.get('/github/repos');
-      const githubRepos = reposResponse.data.data || [];
-      setAllRepos(githubRepos);
-      
-      // Fetch synced tasks
-      const tasksResponse = await api.get('/tasks');
-      const allTasks = tasksResponse.data.success ? tasksResponse.data.data : [];
-      const githubTasks = allTasks.filter(task => task.repo);
-      setTasks(githubTasks);
-      
-      // Calculate stats
-      const totalCommits = githubTasks.reduce((sum, task) => 
-        sum + (task.commitHistory?.length || 0), 0
-      );
-      
-      const lastSyncDates = githubTasks
-        .map(task => task.lastSyncedAt)
-        .filter(Boolean)
-        .sort((a, b) => new Date(b) - new Date(a));
-      
-      setStats({
-        totalRepos: githubRepos.length,
-        totalCommits,
-        syncedRepos: githubTasks.length,
-        lastSync: lastSyncDates[0] || null
-      });
-
-      // Fetch recent activity from all repos
-      await fetchRecentActivity(githubRepos.slice(0, 10)); // Get activity from first 10 repos
-      
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchRecentActivity = async (repos) => {
+  const fetchRecentActivity = useCallback(async (repos) => {
     if (repos.length === 0) return;
     
     try {
@@ -103,7 +57,53 @@ const GitHubActivityPanel = () => {
     } finally {
       setLoadingActivity(false);
     }
-  };
+  }, []);
+
+  const fetchAllData = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all GitHub repos from user's account
+      const reposResponse = await api.get('/github/repos');
+      const githubRepos = reposResponse.data.data || [];
+      setAllRepos(githubRepos);
+      
+      // Fetch synced tasks
+      const tasksResponse = await api.get('/tasks');
+      const allTasks = tasksResponse.data.success ? tasksResponse.data.data : [];
+      const githubTasks = allTasks.filter(task => task.repo);
+      setTasks(githubTasks);
+      
+      // Calculate stats
+      const totalCommits = githubTasks.reduce((sum, task) => 
+        sum + (task.commitHistory?.length || 0), 0
+      );
+      
+      const lastSyncDates = githubTasks
+        .map(task => task.lastSyncedAt)
+        .filter(Boolean)
+        .sort((a, b) => new Date(b) - new Date(a));
+      
+      setStats({
+        totalRepos: githubRepos.length,
+        totalCommits,
+        syncedRepos: githubTasks.length,
+        lastSync: lastSyncDates[0] || null
+      });
+
+      // Fetch recent activity from all repos
+      await fetchRecentActivity(githubRepos.slice(0, 10)); // Get activity from first 10 repos
+      
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchRecentActivity]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   const syncTaskCommits = async (taskId) => {
     try {
@@ -133,10 +133,6 @@ const GitHubActivityPanel = () => {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 30) return `${diffDays}d ago`;
     return date.toLocaleDateString();
-  };
-
-  const getRepoName = (fullName) => {
-    return fullName?.split('/')[1] || fullName;
   };
 
   return (
