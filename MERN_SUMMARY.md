@@ -291,7 +291,7 @@ npm start
 | `MERN_UPGRADE.md` | Complete upgrade guide |
 | `README.md` | Original project overview |
 | `SETUP.md` | Basic setup instructions |
-| `GIT_SETUP.md` | Git workflow guide |
+
 
 ## ⚠️ Important Notes
 
