@@ -185,7 +185,7 @@ Write-Host ""
 Write-Host "Documentation Files:" -ForegroundColor Yellow
 Write-Host "  - README.md - Project overview" -ForegroundColor White
 Write-Host "  - SETUP.md - Setup instructions" -ForegroundColor White
-Write-Host "  - QUICK_REFERENCE.md - Quick commands" -ForegroundColor White
-Write-Host "  - GIT_SETUP.md - Git workflow guide" -ForegroundColor White
+Write-Host "  - TESTING.md - Testing guide" -ForegroundColor White
+Write-Host "  - MERN_SUMMARY.md - MERN stack overview" -ForegroundColor White
 Write-Host ""
 Write-Host "Happy coding! 🚀" -ForegroundColor Cyan
